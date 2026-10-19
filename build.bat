@@ -1,5 +1,5 @@
 @echo off
-rem Doom64-X: one double-click from your ROM to Doom64-X.iso.
+rem Doom-64-DC-X: one double-click from your ROM to Doom-64-DC-X.iso.
 rem
 rem   1. put your Doom 64 ROM (US v1.0 or v1.1) in this folder, named baserom.z64
 rem   2. run this file (double-click, or "build.bat" in a console)
@@ -14,10 +14,10 @@ rem A Visual Studio build of an RXDK project runs its Pre-Build Event with no
 rem PATH at all; put the Windows folders back so py and where resolve.
 if not defined PATH set "PATH=%SystemRoot%\System32;%SystemRoot%;%SystemRoot%\System32\Wbem"
 cd /d "%~dp0"
-title Doom64-X build
+title Doom-64-DC-X build
 
 echo.
-echo  Doom64-X -- Doom 64 for the original Xbox
+echo  Doom-64-DC-X -- Doom 64 for the original Xbox
 echo.
 
 set "D64X_ROM="

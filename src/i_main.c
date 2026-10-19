@@ -62,7 +62,7 @@ const mapped_buttons_t default_mapping = {
 .map_down = { .n64button = PAD_DOWN, .dcbuttons = {PAD_DREAMCAST_DPAD_DOWN,0xffffffff}, .dcused = 1 },
 .map_attack = { .n64button = PAD_Z_TRIG, .dcbuttons = {PAD_DREAMCAST_TRIGGER_R,0xffffffff}, .dcused = 1 },
 .map_use = { .n64button = PAD_RIGHT_C, .dcbuttons = {PAD_DREAMCAST_BUTTON_A,PAD_XBOX_THUMB_R}, .dcused = 2 },
-.map_automap = { .n64button = PAD_UP_C, .dcbuttons = {PAD_DREAMCAST_BUTTON_B,PAD_XBOX_BACK}, .dcused = 2 },
+.map_automap = { .n64button = PAD_UP_C, .dcbuttons = {PAD_XBOX_BACK,0xffffffff}, .dcused = 1 },
 .map_speedonoff = { .n64button = PAD_LEFT_C, .dcbuttons = {PAD_DREAMCAST_TRIGGER_L,0xffffffff}, .dcused = 1 },
 .map_strafeonoff = { .n64button = PAD_DOWN_C, .dcbuttons = {0xffffffff,0xffffffff}, .dcused = 0 },
 .map_strafeleft = { .n64button = PAD_L_TRIG, .dcbuttons = {0xffffffff,0xffffffff}, .dcused = 0 },

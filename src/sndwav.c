@@ -94,7 +94,13 @@ int wav_init(void)
 	audio_attr.create_detached = 0;
 	audio_attr.stack_size = 32768;
 	audio_attr.stack_ptr = NULL;
+#if defined(TARGET_XBOX)
+	// XBOX: above the game's own threads, so a busy frame or a level load
+	// does not hold off the stream's refill (it sleeps 50 ms between polls)
+	audio_attr.prio = PRIO_DEFAULT - 1;
+#else
 	audio_attr.prio = PRIO_DEFAULT;
+#endif
 	audio_attr.label = "MusicPlayer";
 
 	audio_thread = thd_create_ex(&audio_attr, sndwav_thread, NULL);

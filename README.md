@@ -67,7 +67,7 @@ have installed does not matter.
 python setup.py
 ```
 
-The result is **`out\Release\XISO\Doom64-X.iso`** (about 615 MB).
+The result is **`out\Release\XISO\Doom-64-DC-X.iso`** (about 615 MB).
 
 The build runs, in order:
 
@@ -92,15 +92,17 @@ python setup.py --config Debug  # the debug configuration
 
 ### In Visual Studio
 
-Run `python setup.py --skip-build` once, open `Doom64-X.sln`, choose the
+Run `python setup.py --skip-build` once, open `Doom-64-DC-X.sln`, choose the
 **Xbox** platform and Build. **F5** runs it on your devkit with the Xbox
-Debugger (RXDK).
+Debugger (RXDK). The build lands where the command-line one does:
+`out\<Configuration>\XISO\Doom-64-DC-X.iso`, and the disc's files in
+`out\<Configuration>\Build\Doom-64-DC-X\`.
 
 ## Running
 
-* **Disc image:** boot `out\Release\XISO\Doom64-X.iso` on a modded console
+* **Disc image:** boot `out\Release\XISO\Doom-64-DC-X.iso` on a modded console
   or in [xemu](https://xemu.app/).
-* **Hard disk:** copy the folder `out\Release\Build\Doom64-X\` (the
+* **Hard disk:** copy the folder `out\Release\Build\Doom-64-DC-X\` (the
   `default.xbe` and its `data` folder) to your Xbox and launch `default.xbe`.
 
 ## Controls
@@ -114,11 +116,12 @@ Debugger (RXDK).
 | Right trigger | fire |
 | Left trigger | walk slowly while held (with Always Run on, the default) |
 | A, or click the right stick | use: open doors, press switches |
-| B, or BACK | automap |
+| BACK | automap |
 | X, or WHITE | previous weapon |
 | Y, or BLACK | next weapon |
 | D-pad | walk and turn |
 | START | pause menu |
+| B | nothing (it is the menus' back button; give it an action in Options > Gamepad) |
 
 On the automap, hold A to move around the map: the left stick pans it and
 the triggers zoom.
@@ -181,7 +184,7 @@ UP,1,DPAD_UP
 DOWN,1,DPAD_DOWN
 ATTACK,1,TRIGGER_R
 USE,2,BUTTON_A,THUMB_R
-AUTOMAP,2,BUTTON_B,BUTTON_BACK
+AUTOMAP,1,BUTTON_BACK
 SPEED,1,TRIGGER_L
 STRAFE,0
 STRAFELEFT,0
@@ -231,17 +234,17 @@ The changes to the Dreamcast port's own files are few and each is marked
 ## Layout
 
 ```
-build.bat             double-click build: finds Python, then runs setup.py
-setup.py              the one-command build
-rxdk.project.json     the build manifest (tools/xbox/gen_manifest.py)
-Doom64-X.sln/.vcxproj Visual Studio: a native RXDK project (tools/xbox/gen_vcxproj.py)
-Platform/xbox/        the Xbox platform layer (KallistiOS on the Xbox)
-tools/xbox/           host-side build glue (config, manifest, icons, checks)
-src/                  the Dreamcast port's game code
-wadtool/              its ROM extractor
-extern/               the Dreamcast port at its pinned revision (fetched, not committed)
-build/                wadtool and what it extracts (not committed)
-data/                 the disc's data folder (generated, not committed)
+build.bat                  double-click build: finds Python, then runs setup.py
+setup.py                   the one-command build
+rxdk.project.json          the build manifest (tools/xbox/gen_manifest.py)
+Doom-64-DC-X.sln/.vcxproj  Visual Studio: a native RXDK project (tools/xbox/gen_vcxproj.py)
+Platform/xbox/             the Xbox platform layer (KallistiOS on the Xbox)
+tools/xbox/                host-side build glue (config, manifest, icons, checks)
+src/                       the Dreamcast port's game code
+wadtool/                   its ROM extractor
+extern/                    the Dreamcast port at its pinned revision (fetched, not committed)
+build/                     wadtool and what it extracts (not committed)
+data/                      the disc's data folder (generated, not committed)
 ```
 
 ## Licensing

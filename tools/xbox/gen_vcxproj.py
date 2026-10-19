@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-r"""Write Doom64-X.sln / .vcxproj / .vcxproj.filters from rxdk.project.json.
+r"""Write Doom-64-DC-X.sln / .vcxproj / .vcxproj.filters from rxdk.project.json.
 
 The manifest is the authority (tools/xbox/gen_manifest.py writes it);
 the Visual Studio project is RXDK's own rendering of it,
@@ -32,7 +32,7 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import xbconfig  # noqa: E402
 
 ROOT = xbconfig.ROOT
-NAME = "Doom64-X"
+NAME = "Doom-64-DC-X"
 GUID = "{%s}" % str(uuid.uuid5(uuid.NAMESPACE_URL, "https://github.com/jnmartin84/doom64-dc#xbox")).upper()
 FILTER_NS = uuid.uuid5(uuid.NAMESPACE_URL, "https://github.com/jnmartin84/doom64-dc#xbox-filters")
 
@@ -107,6 +107,23 @@ def main():
     props += ("  <ItemGroup>\n"
               "    <IsoCopyDir Remove=\"Media\" />\n"
               "  </ItemGroup>\n")
+    # Where the build goes: as Rxdk.Cli (setup.py) lays it out, not MSBuild's
+    # defaults (Xbox\<Config>\ for the output, <Project>\Xbox\<Config>\ for
+    # the objects, XISO\ beside the XBE for the staged disc) -- everything
+    # under out\<Config>\: the objects, <Name>.exe / .xbe, the staged disc in
+    # Build\<Name>\ (default.xbe and data\) and the ISO in XISO\<Name>.iso.
+    # Properties evaluate before any item definition, so RXDK's own, which
+    # name $(OutDir), take these.
+    props += ("  <PropertyGroup Label=\"Output\">\n"
+              "    <OutDir>$(MSBuildProjectDirectory)\\out\\$(Configuration)\\</OutDir>\n"
+              "    <IntDir>$(MSBuildProjectDirectory)\\out\\$(Configuration)\\</IntDir>\n"
+              "  </PropertyGroup>\n"
+              "  <ItemGroup Condition=\"'$(RxdkCreateIso)' != 'false'\">\n"
+              "    <Xiso Remove=\"@(Xiso)\" />\n"
+              "    <Xiso Include=\"$(OutDir)Build\\$(TargetName)\">\n"
+              "      <OutputFile>$(OutDir)XISO\\$(TargetName).iso</OutputFile>\n"
+              "    </Xiso>\n"
+              "  </ItemGroup>\n")
     proj = proj.replace(old, props, 1) if deploy else proj.replace(
         '  <Import Project="$(VCTargetsPath)\\Microsoft.Cpp.targets" />',
         props + '  <Import Project="$(VCTargetsPath)\\Microsoft.Cpp.targets" />', 1)
@@ -118,7 +135,9 @@ def main():
     # tree.
     stage = r"""  <!-- gen_vcxproj.py: RXDK's StageIsoFiles, keeping each deploy folder's tree in the ISO
        (data\maps\x.wad at data\maps\x.wad, as Rxdk.Cli and Deploy place it, not at the
-       root). Otherwise the same target. -->
+       root), and copying, not hard-linking: linked, the staged default.xbe would be the
+       XBE itself and the staged data\ the project's data\, which the command-line build,
+       staging into the same folder, would then write through. Otherwise the same target. -->
   <Target Name="StageIsoFiles"
           Inputs="%(ImageBld.OutputFile);@(IsoCopy);@(IsoCopyDir)"
           Outputs="@(Xiso)"
@@ -133,15 +152,16 @@ def main():
       <_XisoDir>@(Xiso)</_XisoDir>
     </PropertyGroup>
     <RemoveDir Directories="$(_XisoDir)" />
+    <MakeDir Directories="@(Xiso->'%(OutputFile)'->DirectoryName())" />
     <Copy SourceFiles="%(ImageBld.OutputFile)"
           DestinationFiles="$(_XisoDir)\default.xbe"
-          UseHardlinksIfPossible="true" />
+          UseHardlinksIfPossible="false" />
     <Copy SourceFiles="@(IsoCopy)"
           DestinationFolder="$(_XisoDir)"
-          UseHardlinksIfPossible="true" />
+          UseHardlinksIfPossible="false" />
     <Copy SourceFiles="@(_IsoTreeFile)"
           DestinationFiles="@(_IsoTreeFile->'$(_XisoDir)\%(IsoDir)\%(RecursiveDir)%(Filename)%(Extension)')"
-          UseHardlinksIfPossible="true" />
+          UseHardlinksIfPossible="false" />
   </Target>
 """
     proj = proj.replace("</Project>", stage + "</Project>", 1)

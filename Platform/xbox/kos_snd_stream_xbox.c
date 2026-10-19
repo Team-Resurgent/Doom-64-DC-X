@@ -30,6 +30,7 @@
 #include <kos/dbglog.h>
 #include <kos/sem.h>
 #include <kos/thread.h>
+#include <arch/timer.h>
 #include <dc/spu.h>
 #include <dc/sound/sound.h>
 #include <dc/sound/stream.h>
@@ -38,6 +39,7 @@
 
 #include "aica_cmd_iface.h"
 #include "aica/aica_xbox.h"
+#include "aica/aica_decode.h"
 
 /* Channels are reserved with snd_sfx_chn_alloc, KOS's own way
  * (Platform/xbox/kos_sfxmgr_xbox.c). */
@@ -118,6 +120,7 @@ typedef struct strchan
     int queueing;
     volatile int initted;
     void *user_data;
+    int32_t dec_pred[2], dec_scale[2];  /* ADPCM: the decoder's state after what is written */
 } strchan_t;
 
 static strchan_t streams[SND_STREAM_MAX];
@@ -419,6 +422,18 @@ static void snd_stream_start_type(snd_stream_hnd_t hnd, uint32_t type, uint32_t 
     while (bytes_to_samples(hnd, streams[hnd].buffer_size) > 65535)
         streams[hnd].buffer_size /= 2;
 
+    /* the decoder starts where the chip's does at key on (adpcm_track) */
+    {
+        int c;
+
+        for (c = 0; c < streams[hnd].channels; c++)
+        {
+            streams[hnd].dec_pred[c] = 0;
+            streams[hnd].dec_scale[c] = 127;
+            aica_mixer_stream_sync_reset(streams[hnd].ch[c]);
+        }
+    }
+
     /* prefill both halves */
     snd_stream_fill(hnd, 0, streams[hnd].buffer_size / 2);
     snd_stream_fill(hnd, (uint32_t)(streams[hnd].buffer_size / 2), streams[hnd].buffer_size / 2);
@@ -510,6 +525,37 @@ void snd_stream_stop(snd_stream_hnd_t hnd)
     }
 }
 
+/* An ADPCM stream's data, `size` bytes of it written at byte `offset` of
+ * channel c's ring, run through the AICA's decoder (aica/aica_decode.h) from
+ * where the last stretch left it: the state at the stretch's start goes to
+ * the mixer, which brings the channel back into step with it should the
+ * channel have played stale ring while this feeder was held off
+ * (aica_mixer_xbox.c, "stream resync"). Not KOS's: its feeder trusts the
+ * chip and the SH-4 to keep pace. */
+static void adpcm_track(strchan_t *stream, int c, const uint8_t *p, uint32_t offset, size_t size)
+{
+    int32_t pred = stream->dec_pred[c], scale = stream->dec_scale[c];
+    size_t i;
+    int h;
+
+    aica_mixer_stream_sync(stream->ch[c], offset * 2, (uint32_t)size * 2, pred, scale);
+    for (i = 0; i < size; i++)
+    {
+        for (h = 0; h < 2; h++)
+        {
+            int code = (p[i] >> (h ? 4 : 0)) & 0xF, m = code & 7;
+            int32_t move = ((2 * m + 1) * scale) >> 3;
+
+            pred = (code & 8) ? pred - move : pred + move;
+            pred = pred > 32767 ? 32767 : pred < -32768 ? -32768 : pred;
+            scale = (scale * kAicaAdpcmStep[m]) >> 8;
+            scale = scale < 127 ? 127 : scale > 24576 ? 24576 : scale;
+        }
+    }
+    stream->dec_pred[c] = pred;
+    stream->dec_scale[c] = scale;
+}
+
 /* The Dreamcast DMAs the buffer(s) to sound RAM and the completion
  * releases stream_sem; the copy here is synchronous, so it releases it
  * at once. */
@@ -518,6 +564,12 @@ static int snd_stream_transfer(strchan_t *stream, void *first_buf, uint32_t offs
     spu_memload(stream->spu_ram_sch[0] + offset, first_buf, size);
     if (stream->channels == 2)
         spu_memload(stream->spu_ram_sch[1] + offset, sep_buffer[1], size);
+    if (stream->bitsize == 4)
+    {
+        adpcm_track(stream, 0, (const uint8_t *)first_buf, offset, size);
+        if (stream->channels == 2)
+            adpcm_track(stream, 1, (const uint8_t *)sep_buffer[1], offset, size);
+    }
     sem_signal(&stream_sem);
     return 0;
 }
@@ -584,6 +636,16 @@ static size_t snd_stream_fill(snd_stream_hnd_t hnd, uint32_t offset, size_t size
     return (size_t)got_bytes;
 }
 
+/* the longest the feeder went between polls, ms, worst of ~2 s (the
+ * diagnostics line, src/st_main.c) */
+static volatile uint32_t stat_poll_gap, stat_poll_gap_peak;
+static uint64_t stat_poll_last, stat_poll_window;
+
+uint32_t xbox_stream_poll_gap(void)
+{
+    return stat_poll_gap;
+}
+
 int snd_stream_poll(snd_stream_hnd_t hnd)
 {
     uint32_t write_pos;
@@ -598,6 +660,20 @@ int snd_stream_poll(snd_stream_hnd_t hnd)
     stream = &streams[hnd];
     if (!stream->initted || (!stream->get_data && !stream->req_data) || stream->channels == 0)
         return -1;
+
+    {
+        uint64_t now = timer_ms_gettime64();
+
+        if (stat_poll_last != 0 && now - stat_poll_last > stat_poll_gap_peak)
+            stat_poll_gap_peak = (uint32_t)(now - stat_poll_last);
+        stat_poll_last = now;
+        if (now - stat_poll_window >= 2000)
+        {
+            stat_poll_gap = stat_poll_gap_peak;
+            stat_poll_gap_peak = 0;
+            stat_poll_window = now;
+        }
+    }
 
     /* the channel's position, as the firmware mirrors it */
     current_play_pos = (uint16_t)(snd_get_pos((unsigned)stream->ch[0]) & 0xffff);

@@ -1,4 +1,4 @@
-# Doom64-X: nothing taken from the game, or from the Dreamcast port's data,
+# Doom-64-DC-X: nothing taken from the game, or from the Dreamcast port's data,
 # is ever committed. You supply the ROM; setup.py makes the rest locally.
 
 # --- your game files -------------------------------------------------------
@@ -31,7 +31,9 @@ selfboot/
 
 # --- build output ----------------------------------------------------------
 /out/
+# Visual Studio's build: its output, and its intermediates under the project name
 /Xbox/
+/Doom-64-DC-X/
 *.iso
 *.xbe
 *.exe

@@ -51,6 +51,15 @@ void aica_mixer_tap(int16_t *dst, int frames, int rate);
 void aica_mixer_key_on(int ch);
 void aica_mixer_key_off(int ch);
 uint32_t aica_mixer_pos(int ch);
+/* a long-stream channel's decoder state at the start of a stretch of its
+ * ring, `count` samples from sample `pos`, as its feeder wrote it; reset
+ * when the stream starts (aica_mixer_xbox.c, "stream resync") */
+void aica_mixer_stream_sync(int ch, uint32_t pos, uint32_t count, int32_t pred, int32_t scale);
+void aica_mixer_stream_sync_reset(int ch);
+/* health: the mix's worst cost as % of real time (last ~1 s), times the
+ * DirectSound stream ran dry, channels sounding, long streams put back in
+ * step */
+void aica_mixer_stats(uint32_t *load, uint32_t *starved, uint32_t *voices, uint32_t *resyncs);
 /* the full sample address of a channel: KOS's register encoding has 23
  * bits for it, and a host address does not fit (aica_fw_xbox.c aica_play) */
 extern uint32_t xbox_aica_chan_base[64];

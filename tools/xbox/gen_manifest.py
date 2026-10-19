@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Write rxdk.project.json: what Rxdk.Cli builds Doom64-X from.
+"""Write rxdk.project.json: what Rxdk.Cli builds Doom-64-DC-X from.
 
 The Dreamcast Makefile builds every src/*.c (C_FILES := $(wildcard src/*.c))
 and links array_fast_copy.o, its SH-4 assembly copy routines. The Xbox build
@@ -19,7 +19,7 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import xbconfig  # noqa: E402
 
 ROOT = xbconfig.ROOT
-PROJECT_NAME = "Doom64-X"           # the ISO is out/<Config>/XISO/Doom64-X.iso
+PROJECT_NAME = "Doom-64-DC-X"           # the ISO is out/<Config>/XISO/Doom-64-DC-X.iso
 # Team Resurgent TitleID-DB: the next after Star-Fox-64-X (54520012)
 TITLE_ID = "0x54520013"
 TITLE_NAME = "Doom 64"

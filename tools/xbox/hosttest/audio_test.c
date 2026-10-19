@@ -10,9 +10,15 @@
  * direct decode of the same file.
  *
  *   audio_test <data folder> <out.wav> <seconds> [music name] [sfx 0|1]
+ *              [stall at s] [stall length s] [loop 0|1]
+ *
+ * A stall freezes every thread but this one -- the music player's among
+ * them -- for its length while the mix goes on: the stream's feeder held
+ * off, as a level loading from the disc can hold it off on the Xbox.
  */
 #include "xtl.h"
 
+#include <tlhelp32.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -132,6 +138,39 @@ static LONG WINAPI crashed(EXCEPTION_POINTERS *e)
     return 0;
 }
 
+/* every thread of this process but the caller's, suspended (on) or resumed */
+static void hold_others(int on)
+{
+    THREADENTRY32 te;
+    HANDLE snap = CreateToolhelp32Snapshot(TH32CS_SNAPTHREAD, 0);
+    DWORD me = GetCurrentThreadId(), pid = GetCurrentProcessId();
+
+    if (snap == INVALID_HANDLE_VALUE)
+        return;
+    te.dwSize = sizeof(te);
+    if (Thread32First(snap, &te))
+    {
+        do
+        {
+            if (te.th32OwnerProcessID == pid && te.th32ThreadID != me)
+            {
+                HANDLE h = OpenThread(THREAD_SUSPEND_RESUME, FALSE, te.th32ThreadID);
+
+                if (h != NULL)
+                {
+                    if (on)
+                        SuspendThread(h);
+                    else
+                        ResumeThread(h);
+                    CloseHandle(h);
+                }
+            }
+            te.dwSize = sizeof(te);
+        } while (Thread32Next(snap, &te));
+    }
+    CloseHandle(snap);
+}
+
 static void put32(FILE *f, uint32_t v) { fwrite(&v, 4, 1, f); }
 static void put16(FILE *f, uint16_t v) { fwrite(&v, 2, 1, f); }
 
@@ -142,7 +181,8 @@ int main(int argc, char **argv)
     const char *mus = argc > 4 ? argv[4] : "musamb01";
     int use_sfx = argc > 5 ? atoi(argv[5]) : 1;
     int seconds = argc > 3 ? atoi(argv[3]) : 10;
-    int total = seconds * 44100 / AICA_PASS, done = 0, i, next_sfx = 0;
+    double stall_at = argc > 6 ? atof(argv[6]) : -1.0, stall_len = argc > 7 ? atof(argv[7]) : 1.5;
+    int total = seconds * 44100 / AICA_PASS, done = 0, i, next_sfx = 0, stalled = 0;
     char path[512];
     int16_t pcm[AICA_PASS * 2];
     FILE *out;
@@ -179,7 +219,7 @@ int main(int argc, char **argv)
     if (strcmp(mus, "none") != 0)
     {
         snprintf(path, sizeof(path), "/cd/mus/%s.adpcm", mus);
-        if (wav_create(path, 1) == SND_STREAM_INVALID)
+        if (wav_create(path, argc > 8 ? atoi(argv[8]) : 1) == SND_STREAM_INVALID)
         {
             fprintf(stderr, "wav_create %s failed\n", path);
             return 1;
@@ -209,6 +249,23 @@ int main(int argc, char **argv)
         {
             Sleep(1);
             continue;
+        }
+        if (stall_at >= 0.0)
+        {
+            double now = (double)done * AICA_PASS / 44100.0;
+
+            if (stalled == 0 && now >= stall_at)
+            {
+                hold_others(1);
+                stalled = 1;
+                fprintf(stderr, "audio_test: feeder held at %.2f s\n", now);
+            }
+            else if (stalled == 1 && now >= stall_at + stall_len)
+            {
+                hold_others(0);
+                stalled = 2;
+                fprintf(stderr, "audio_test: feeder released at %.2f s\n", now);
+            }
         }
         while (done < due)
         {

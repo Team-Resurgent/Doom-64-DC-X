@@ -1,6 +1,12 @@
 /* st_main.c -- status bar */
 
 #include "doomdef.h"
+#if defined(TARGET_XBOX)
+// XBOX: a diagnostics line for the audio (ST_Drawer); 0 for a release
+#define XBOX_AUDIO_DIAG 0
+void aica_mixer_stats(uint32_t *load, uint32_t *starved, uint32_t *voices, uint32_t *resyncs);
+uint32_t xbox_stream_poll_gap(void);
+#endif
 #include "st_main.h"
 #include "r_local.h"
 
@@ -597,6 +603,24 @@ void ST_Drawer(void) // 80029DC0
 
 		ST_DrawNumber(298 - menu_settings.HUDmargin, 227 - menu_settings.HUDmargin, player->armorpoints, 0, HUDcolor, ST_BELOW_OVL);
 	}
+#if defined(TARGET_XBOX) && XBOX_AUDIO_DIAG
+	// XBOX: the software AICA's health, for chasing an audio fault (a test
+	// build's; XBOX_AUDIO_DIAG 0 takes it out). LOAD: the mix's worst cost
+	// against real time, % (past 100 it cannot keep up); RUN: times
+	// DirectSound ran dry; VO: channels sounding; SYNC: times the music was
+	// put back in step; GAP: the longest wait between the music's refills,
+	// ms (past about 370 the music has gone round its buffer).
+	{
+		char diag[96];
+		uint32_t load, starved, voices, resyncs;
+
+		aica_mixer_stats(&load, &starved, &voices, &resyncs);
+		sprintf(diag, "LOAD %u RUN %u VO %u SYNC %u GAP %u", (unsigned)load, (unsigned)starved,
+			(unsigned)voices, (unsigned)resyncs, (unsigned)xbox_stream_poll_gap());
+		ST_Message(2 + menu_settings.HUDmargin, 32 + menu_settings.HUDmargin, diag,
+			0xffffff00 | menu_settings.HUDopacity, ST_BELOW_OVL);
+	}
+#endif
 }
 
 #define ST_FONTWHSIZE 8

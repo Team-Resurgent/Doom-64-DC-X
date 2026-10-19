@@ -10,8 +10,8 @@ the upstream projects' and are not changed here.
 MIT (below, Team Resurgent) -- the Xbox port's original work:
 
   * Platform/xbox/, except the KallistiOS code listed in NOTICE;
-  * tools/xbox/, setup.py, build.bat, rxdk.project.json, Doom64-X.sln,
-    Doom64-X.vcxproj, Doom64-X.vcxproj.filters, .gitignore,
+  * tools/xbox/, setup.py, build.bat, rxdk.project.json, Doom-64-DC-X.sln,
+    Doom-64-DC-X.vcxproj, Doom-64-DC-X.vcxproj.filters, .gitignore,
     .gitattributes, LICENSE, NOTICE and README.md;
   * the Xbox port's changes marked XBOX: in the files under src/ and
     wadtool/.

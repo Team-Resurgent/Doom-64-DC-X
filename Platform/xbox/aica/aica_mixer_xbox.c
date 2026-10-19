@@ -40,6 +40,12 @@
 #include "aica_decode.h"
 
 static Voice sV[64];
+
+/* health, for the diagnostics line (aica_mixer_stats) */
+static volatile uint32_t sStatResyncs;      /* a long stream put back in step */
+static volatile uint32_t sStatStarved;      /* DirectSound found with nothing queued */
+static volatile uint32_t sStatVoices;       /* channels sounding, last mix */
+static volatile uint32_t sStatLoad;         /* mix time / play time, % (worst of ~1 s) */
 static CRITICAL_SECTION sLock;  /* key on/off from the firmware vs the mix */
 static int sLockReady;
 
@@ -87,6 +93,101 @@ void aica_mixer_key_off(int ch)
 uint32_t aica_mixer_pos(int ch)
 {
     return sV[ch].pos;
+}
+
+/* ===================================================== stream resync */
+
+/* A long-stream ADPCM channel (PCMS 3) decodes its ring straight on, round
+ * and round, and its feeder (kos_snd_stream_xbox.c) keeps the ring ahead of
+ * it. Should the feeder fall behind -- held off by a level loading from the
+ * disc, say -- the channel plays a stretch of the ring again, and from then
+ * on its decoder's prediction and scale are not the ones the data was
+ * encoded from: nothing in Yamaha ADPCM brings them back, so the music stays
+ * garbled (an offset that clips everything mixed with it) until the channel
+ * is keyed on again. The Dreamcast's feeder seldom falls behind; here the
+ * feeder records, with each stretch it writes, the decoder state at its
+ * start (as it runs the data through the same decoder), and the channel
+ * takes that state whenever it reaches one of those starts. In step, it is
+ * the state the channel has already; out of step, the music comes back in
+ * at most one stretch -- and a stretch played again is played as it was. */
+#define SYNC_POINTS 4
+
+typedef struct SyncPoint
+{
+    int valid;
+    uint32_t pos;               /* the sample a stretch starts at */
+    int32_t pred, scale;        /* the decoder's state before it */
+} SyncPoint;
+
+static SyncPoint sSync[64][SYNC_POINTS];
+static volatile int sSyncAny[64];
+
+void aica_mixer_stream_sync_reset(int ch)
+{
+    if (ch < 0 || ch >= 64)
+        return;
+    if (sLockReady)
+        EnterCriticalSection(&sLock);
+    memset(sSync[ch], 0, sizeof(sSync[ch]));
+    sSyncAny[ch] = 0;
+    if (sLockReady)
+        LeaveCriticalSection(&sLock);
+}
+
+void aica_mixer_stream_sync(int ch, uint32_t pos, uint32_t count, int32_t pred, int32_t scale)
+{
+    SyncPoint *s;
+    int i, slot = -1;
+
+    if (ch < 0 || ch >= 64)
+        return;
+    if (sLockReady)
+        EnterCriticalSection(&sLock);
+    s = sSync[ch];
+    for (i = 0; i < SYNC_POINTS; i++)
+    {
+        /* a point inside the new stretch is for data no longer there */
+        if (s[i].valid && s[i].pos > pos && s[i].pos < pos + count)
+            s[i].valid = 0;
+        if (s[i].valid && s[i].pos == pos)
+            slot = i;
+    }
+    for (i = 0; slot < 0 && i < SYNC_POINTS; i++)
+        if (!s[i].valid)
+            slot = i;
+    if (slot < 0)
+        slot = 0;
+    s[slot].valid = 1;
+    s[slot].pos = pos;
+    s[slot].pred = pred;
+    s[slot].scale = scale;
+    sSyncAny[ch] = 1;
+    if (sLockReady)
+        LeaveCriticalSection(&sLock);
+}
+
+/* the channel's next sample, a long stream taking its feeder's state at the
+ * start of a stretch (above) */
+static inline int32_t next_sample(int ch, Voice *v)
+{
+    if (v->fmt == 3 && sSyncAny[ch])
+    {
+        const SyncPoint *s = sSync[ch];
+        int i;
+
+        for (i = 0; i < SYNC_POINTS; i++)
+        {
+            if (s[i].valid && s[i].pos == v->dec)
+            {
+                if (v->pred != s[i].pred || v->scale != s[i].scale)
+                    sStatResyncs++;
+                v->pred = s[i].pred;
+                v->scale = s[i].scale;
+                break;
+            }
+        }
+    }
+    return decode_next(v);
 }
 
 /* ============================================================ levels */
@@ -153,6 +254,7 @@ static void mix(int16_t *out, int n)
     memset(accR, 0, sizeof(float) * n);
 
     EnterCriticalSection(&sLock);
+    sStatVoices = 0;
     for (ch = 0; ch < 64; ch++)
     {
         Voice *v = &sV[ch];
@@ -163,6 +265,7 @@ static void mix(int16_t *out, int n)
 
         if (!v->playing)
             continue;
+        sStatVoices++;
         r24 = *(volatile uint32_t *)(r + 0x24);
         pitch = *(volatile uint32_t *)(r + 0x18);
         oct = (int)((pitch >> 11) & 0xF);
@@ -170,6 +273,15 @@ static void mix(int16_t *out, int n)
             oct -= 16;
         step = (1024u + (pitch & 0x3FF));       /* x 2^oct / 1024, in 16.16 */
         step = (oct >= -6) ? step << (oct + 6) : step >> (-oct - 6);
+        /* The chip plays any pitch at the same cost; this loop decodes
+         * every sample it passes, so a channel keyed at the top octaves
+         * (up to 256 samples an output sample) would cost the mix more
+         * than real time and starve the stream -- every channel crackling,
+         * for as long as it loops. Past 16 samples an output sample all
+         * of it is far above what 44.1 kHz can carry; held there, it
+         * costs a bounded amount. Doom's sounds play at half to twice. */
+        if (step > (16u << 16))
+            step = 16u << 16;
         tl = sTlGain[r[0x29]];
         dipan = (int)(r24 & 0x1F);
         gL = gR = tl * sLevelGain[(r24 >> 8) & 0x0F];
@@ -200,7 +312,7 @@ static void mix(int16_t *out, int n)
                     v->pos = v->lsa;
                 }
                 v->cur = v->nxt;
-                v->nxt = (v->loop || v->dec < v->lea) ? decode_next(v) : 0;
+                v->nxt = (v->loop || v->dec < v->lea) ? next_sample(ch, v) : 0;
             }
         }
     }
@@ -240,6 +352,14 @@ void aica_mixer_tap(int16_t *dst, int frames, int rate)
     }
 }
 
+void aica_mixer_stats(uint32_t *load, uint32_t *starved, uint32_t *voices, uint32_t *resyncs)
+{
+    *load = sStatLoad;
+    *starved = sStatStarved;
+    *voices = sStatVoices;
+    *resyncs = sStatResyncs;
+}
+
 #if defined(AICA_HOST_TEST)
 /* tools/xbox/hosttest: the same firmware passes and mix, on the PC, into a
  * buffer the test reads; no DirectSound, no thread */
@@ -270,7 +390,12 @@ void aica_host_render(int16_t *out, int passes)
 #else
 /* ====================================================== the stream */
 
-#define PACKETS        6
+/* 12 packets, 109 ms queued. The other ports keep 6 (54 ms); the console
+ * keeps that fed, but xemu holds the whole machine still while it builds a
+ * shader for a render state it has not met, and Doom's renderer (bump
+ * mapping, its blends, the sorted translucency) meets far more of them than
+ * theirs: 54 ms ran dry, again and again, in the attract demo. */
+#define PACKETS        12
 #define PACKET_PASSES  4                    /* 400 samples, 9 ms */
 #define PACKET_SAMPLES (AICA_PASS * PACKET_PASSES)
 
@@ -313,10 +438,13 @@ void xbox_fpu_setup(void);
 
 static DWORD WINAPI mixer_thread(LPVOID arg)
 {
-    int k = 0;
+    int k = 0, j, pending;
+    LARGE_INTEGER f, t0, t1;
+    uint64_t busy, window = 0, peak = 0;
 
     (void)arg;
     xbox_fpu_setup();       /* denormals in a fading voice cost a P3 dearly */
+    QueryPerformanceFrequency(&f);
     for (;;)
     {
         /* packets complete in order: wait for the oldest, refill it */
@@ -324,9 +452,44 @@ static DWORD WINAPI mixer_thread(LPVOID arg)
         DirectSoundDoWork();
         if (sStatus[k] == XMEDIAPACKET_STATUS_PENDING)
             continue;
+        for (j = 0, pending = 0; j < PACKETS; j++)
+            pending += sStatus[j] == XMEDIAPACKET_STATUS_PENDING;
+        if (pending == 0)
+        {
+            /* Ran dry: nothing queued. Start the stream over -- flushed,
+             * then the whole queue mixed and handed over at once -- rather
+             * than trickle packets back into a starved voice one by one,
+             * each going out as soon as it lands with nothing behind it
+             * (and xemu's model of a voice that starved is the least
+             * exercised path it has). */
+            sStatStarved++;
+            IDirectSoundStream_Flush(sStream);
+            for (j = 0; j < PACKETS; j++)
+            {
+                fill_packet(j);
+                submit(j);
+            }
+            k = 0;
+            continue;
+        }
+        QueryPerformanceCounter(&t0);
         fill_packet(k);
+        QueryPerformanceCounter(&t1);
         submit(k);
         k = (k + 1) % PACKETS;
+
+        /* the mix's cost against the packet's playing time, the worst
+         * packet of each ~1 s */
+        busy = (uint64_t)(t1.QuadPart - t0.QuadPart) * 100u * AICA_RATE /
+               ((uint64_t)f.QuadPart * PACKET_SAMPLES);
+        if (busy > peak)
+            peak = busy;
+        if (++window >= AICA_RATE / PACKET_SAMPLES)
+        {
+            sStatLoad = (uint32_t)peak;
+            peak = 0;
+            window = 0;
+        }
     }
     return 0;
 }

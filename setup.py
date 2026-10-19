@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """One command from your Doom 64 ROM to an Xbox disc image.
 
-    python setup.py                 # everything -> out/Release/XISO/Doom64-X.iso
+    python setup.py                 # everything -> out/Release/XISO/Doom-64-DC-X.iso
     python setup.py --check         # say what is there and what is missing
     python setup.py --skip-build    # stop before compiling (to build in Visual Studio)
     python setup.py --config Debug  # the debug configuration
@@ -46,7 +46,7 @@ ROOT = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, os.path.join(ROOT, "tools", "xbox"))
 import xbconfig  # noqa: E402
 
-NAME = "Doom64-X"
+NAME = "Doom-64-DC-X"
 BUILD = os.path.join(ROOT, "build")
 ROM_NAMES = ("baserom.z64", "doom64.z64", "baserom.v64", "doom64.v64", "baserom.n64", "doom64.n64")
 ROM_OUT = os.path.join(BUILD, "doom64.z64")
