@@ -39,17 +39,17 @@
  * the depth the frame is cleared to.
  *
  * Lists. Opaque, then punch-through (alpha-tested at the PT reference the
- * game writes, 10), then translucent, as the PVR renders a tile. The opaque
- * list does not blend, whatever a header's blend fields say; the
- * punch-through list does -- Doom draws its switches there as a colour
- * multiplied over their own bump result (src/r_phase3.c R_RenderSwitch),
- * so a punch-through polygon is also compared GEQUAL where its header says
- * GREATER: on its own bump result's depth a GREATER would draw nothing.
- * What punch-through means is kept: a pixel past the alpha test is solid,
- * its alpha 1 to the blend. (Blended by its filtered alpha, a grate's
- * edges would let through what is behind them at the time -- the bare bump
- * light of the room beyond, whose colour pass then fails the grate's
- * depth: a white fringe round every hole.)
+ * game writes, 10), then translucent, as the PVR renders a tile. Neither of
+ * the first two blends, whatever a header's blend fields say: a
+ * punch-through pixel past the alpha test is written whole, one that fails
+ * is not written at all. Doom draws a bump-mapped switch's colour there,
+ * over its own bump result (src/r_phase3.c R_RenderSwitch), and the colour
+ * replaces it -- multiplied over it, as a blend would, the switch came out
+ * a dark square on Ultra. So a punch-through polygon is compared GEQUAL
+ * where its header says GREATER: on its own bump result's depth a GREATER
+ * would draw nothing (switches with no texture). And a grate's edges,
+ * blended by their filtered alpha, would let through the bare bump light of
+ * the room beyond: a white fringe round every hole.
  * The translucent list is autosorted on the PVR (pvr_init's
  * autosort_disabled = 0), per pixel, far to near; here it is sorted per
  * triangle, far to near by each triangle's farthest point, ties in submission
@@ -1175,25 +1175,13 @@ static void decode_header(TaCtx *c, const uint32_t *w)
     s.dst_sel = (uint8_t)((m2 >> 24) & 1);
     s.use_alpha = (uint8_t)((m2 >> 20) & 1);
     s.gouraud = c->sprite ? 0 : (uint8_t)((cmd >> 1) & 1);
-    /* the opaque list does not blend on the PVR (see the top) */
-    if (c->list == PVR_LIST_TR_POLY || c->list == PVR_LIST_TR_MOD || c->list == PVR_LIST_PT_POLY)
+    /* the opaque and punch-through lists do not blend on the PVR (see the top) */
+    if (c->list == PVR_LIST_TR_POLY || c->list == PVR_LIST_TR_MOD)
     {
         s.blend_src = (uint8_t)((m2 >> 29) & 7);
         s.blend_dst = (uint8_t)((m2 >> 26) & 7);
-        if (c->list == PVR_LIST_PT_POLY)
-        {
-            /* punch-through: the source alpha is 1 to the blend */
-            static const uint8_t kPtFactor[8] = {
-                PVR_BLEND_ZERO, PVR_BLEND_ONE, PVR_BLEND_DESTCOLOR, PVR_BLEND_INVDESTCOLOR,
-                PVR_BLEND_ONE, PVR_BLEND_ZERO, PVR_BLEND_DESTALPHA, PVR_BLEND_INVDESTALPHA,
-            };
-
-            s.blend_src = kPtFactor[s.blend_src & 7];
-            s.blend_dst = kPtFactor[s.blend_dst & 7];
-        }
         s.blend = !(s.blend_src == PVR_BLEND_ONE && s.blend_dst == PVR_BLEND_ZERO);
-        s.mulpass = c->list != PVR_LIST_PT_POLY &&
-                    s.blend_src == PVR_BLEND_DESTCOLOR && s.blend_dst == PVR_BLEND_ZERO &&
+        s.mulpass = s.blend_src == PVR_BLEND_DESTCOLOR && s.blend_dst == PVR_BLEND_ZERO &&
                     !s.src_sel && !s.dst_sel;
     }
     s.fog = (uint8_t)((m2 >> 22) & 3);
