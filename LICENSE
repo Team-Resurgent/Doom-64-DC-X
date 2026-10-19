@@ -1,0 +1,50 @@
+This repository holds code under several sets of terms.
+
+The Dreamcast port's code (src/, wadtool/, Makefile.dc, README.dreamcast.md),
+from https://github.com/jnmartin84/doom64-dc, itself built on Erick194's
+DOOM64-RE (https://github.com/Erick194/DOOM64-RE) and Immorpher's Doom 64
+XE / Merciless Edition. The Dreamcast port publishes no licence file for
+src/; wadtool/ carries the GNU GPL v3 (wadtool/LICENSE). Those terms are
+the upstream projects' and are not changed here.
+
+MIT (below, Team Resurgent) -- the Xbox port's original work:
+
+  * Platform/xbox/, except the KallistiOS code listed in NOTICE;
+  * tools/xbox/, setup.py, build.bat, rxdk.project.json, Doom64-X.sln,
+    Doom64-X.vcxproj, Doom64-X.vcxproj.filters, .gitignore,
+    .gitattributes, LICENSE, NOTICE and README.md;
+  * the Xbox port's changes marked XBOX: in the files under src/ and
+    wadtool/.
+
+KOS License (Platform/xbox/LICENSE.KOS) -- the KallistiOS code carried into
+Platform/xbox/, listed in NOTICE.
+
+The game itself is not covered by any of these. Doom 64 is still sold and
+is active intellectual property. No ROM, IWAD, music, sound, texture or
+other game data is in this repository, and none may be added to it:
+building needs your own legally obtained copy, and the Dreamcast port's own
+data is fetched from its repository at build time, for your own use.
+
+-------------------------------------------------------------------------
+
+MIT License
+
+Copyright (c) 2026 Team Resurgent
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.

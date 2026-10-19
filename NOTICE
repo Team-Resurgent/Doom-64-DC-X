@@ -1,0 +1,51 @@
+Third-party projects
+
+  doom64-dc            https://github.com/jnmartin84/doom64-dc
+                       jnmartin84's Dreamcast port, which this repository is:
+                       its game code (src/) and ROM extractor (wadtool/, GPL
+                       v3), with the Xbox port's changes marked XBOX:. Its
+                       data -- the selfboot/ folder: the music, the sound
+                       effects, the normal maps, the Knee-Deep-in-the-Dead
+                       levels, the cover art -- is not committed here:
+                       setup.py fetches the repository into extern/ at the
+                       revision it pins (DOOM64_DC_REV) and copies that
+                       folder into data/ on your machine.
+  DOOM64-RE            https://github.com/Erick194/DOOM64-RE
+                       Erick194's reverse-engineered Doom 64, which the
+                       Dreamcast port is built on.
+  Doom 64 XE           https://github.com/Immorpher/doom64xe
+                       Immorpher's Doom 64 XE / Merciless Edition, which the
+                       Dreamcast port follows.
+  KallistiOS           https://github.com/KallistiOS/KallistiOS
+                       The Dreamcast OS. Platform/xbox/ reimplements the part
+                       of its API the game uses, with KOS's own names, types,
+                       constants and struct layouts, and carries code ported
+                       from KOS itself, which stays under the KOS License
+                       (Platform/xbox/LICENSE.KOS):
+                         dc/sound/aica_comm.h (copied unchanged),
+                         aica_cmd_iface.h and aica.h
+                           (sound/arm/aica_cmd_iface.h, aica.h),
+                         aica/aica_fw_xbox.c (sound/arm/main.c, aica.c),
+                         aica/aica_bus_xbox.c (sound/snd_mem.c, snd_iface.c),
+                         kos_snd_stream_xbox.c (sound/snd_stream.c),
+                         kos_sfxmgr_xbox.c (sound/snd_sfxmgr.c),
+                         kos_vmu_pkg.c (util/vmu_pkg.c),
+                         kos_extra_xbox.c: the VMU framebuffer
+                           (util/vmu_fb.c),
+                         pvr_xbox.c: the texture twiddle
+                           (hardware/pvr/pvr_texture.c), the polygon and
+                           sprite header compilers (hardware/pvr/pvr_prim.c)
+                           and the fog table functions
+                           (hardware/pvr/pvr_fog.c, pvr_fog_tables.h),
+                         dc/pvr.h, dc/matrix.h, dc/vec3f.h, dc/fmath.h,
+                         dc/maple/keyboard.h, dc/maple/mouse.h, dc/vector.h:
+                           KOS's declarations.
+  Star-Fox-64-X,       The earlier Xbox ports (Team Resurgent), whose
+  SSB-X                platform layer Platform/xbox/ began as.
+  RXDK                 Team Resurgent's original-Xbox development kit: the
+                       toolchain, SDK and Visual Studio integration the
+                       build uses. Installed separately, not part of this
+                       repository.
+
+Doom 64 is (c) id Software / Midway, now Bethesda Softworks. None of its data
+is distributed here.

@@ -1,0 +1,249 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Platform">
+      <UniqueIdentifier>{1FAB8A1D-26D6-50B3-9FAC-86FC66903630}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Platform\xbox">
+      <UniqueIdentifier>{6548D06E-8E41-5D43-BBDB-3035FC218F34}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Platform\xbox\aica">
+      <UniqueIdentifier>{5ACA727E-E53D-5DC0-9104-864B08E3D0E8}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src">
+      <UniqueIdentifier>{2D71F0C7-CB27-5BBE-81B9-03FBE3678757}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="Platform\xbox\aica\aica_bus_xbox.c">
+      <Filter>Platform\xbox\aica</Filter>
+    </ClCompile>
+    <ClCompile Include="Platform\xbox\aica\aica_fw_xbox.c">
+      <Filter>Platform\xbox\aica</Filter>
+    </ClCompile>
+    <ClCompile Include="Platform\xbox\aica\aica_mixer_xbox.c">
+      <Filter>Platform\xbox\aica</Filter>
+    </ClCompile>
+    <ClCompile Include="Platform\xbox\kos_doom_xbox.c">
+      <Filter>Platform\xbox</Filter>
+    </ClCompile>
+    <ClCompile Include="Platform\xbox\kos_extra_xbox.c">
+      <Filter>Platform\xbox</Filter>
+    </ClCompile>
+    <ClCompile Include="Platform\xbox\kos_fs_xbox.c">
+      <Filter>Platform\xbox</Filter>
+    </ClCompile>
+    <ClCompile Include="Platform\xbox\kos_log_xbox.c">
+      <Filter>Platform\xbox</Filter>
+    </ClCompile>
+    <ClCompile Include="Platform\xbox\kos_maple_xbox.c">
+      <Filter>Platform\xbox</Filter>
+    </ClCompile>
+    <ClCompile Include="Platform\xbox\kos_sfxmgr_xbox.c">
+      <Filter>Platform\xbox</Filter>
+    </ClCompile>
+    <ClCompile Include="Platform\xbox\kos_snd_stream_xbox.c">
+      <Filter>Platform\xbox</Filter>
+    </ClCompile>
+    <ClCompile Include="Platform\xbox\kos_sys_xbox.c">
+      <Filter>Platform\xbox</Filter>
+    </ClCompile>
+    <ClCompile Include="Platform\xbox\kos_thread_xbox.c">
+      <Filter>Platform\xbox</Filter>
+    </ClCompile>
+    <ClCompile Include="Platform\xbox\kos_vmu_pkg.c">
+      <Filter>Platform\xbox</Filter>
+    </ClCompile>
+    <ClCompile Include="Platform\xbox\kos_vmu_xbox.c">
+      <Filter>Platform\xbox</Filter>
+    </ClCompile>
+    <ClCompile Include="Platform\xbox\pvr_xbox.c">
+      <Filter>Platform\xbox</Filter>
+    </ClCompile>
+    <ClCompile Include="Platform\xbox\sh4zam_x86.c">
+      <Filter>Platform\xbox</Filter>
+    </ClCompile>
+    <ClCompile Include="Platform\xbox\xbox_main.c">
+      <Filter>Platform\xbox</Filter>
+    </ClCompile>
+    <ClCompile Include="src\am_main.c">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="src\bc5_decoder.c">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="src\c_convert.c">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="src\d_main.c">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="src\d_screens.c">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="src\decodes.c">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="src\dll.c">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="src\doominfo.c">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="src\doomlib.c">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="src\f_main.c">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="src\g_game.c">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="src\hash.c">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="src\i_main.c">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="src\in_main.c">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="src\m_bbox.c">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="src\m_fixed.c">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="src\m_main.c">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="src\m_password.c">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="src\md5c.c">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="src\p_base.c">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="src\p_ceilng.c">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="src\p_change.c">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="src\p_doors.c">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="src\p_enemy.c">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="src\p_floor.c">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="src\p_inter.c">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="src\p_lights.c">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="src\p_macros.c">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="src\p_map.c">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="src\p_maputl.c">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="src\p_misc.c">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="src\p_mobj.c">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="src\p_move.c">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="src\p_plats.c">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="src\p_pspr.c">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="src\p_setup.c">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="src\p_shoot.c">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="src\p_sight.c">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="src\p_slide.c">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="src\p_spec.c">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="src\p_switch.c">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="src\p_telept.c">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="src\p_tick.c">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="src\p_user.c">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="src\r_data.c">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="src\r_lights.c">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="src\r_main.c">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="src\r_phase1.c">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="src\r_phase2.c">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="src\r_phase3.c">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="src\s_sound.c">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="src\sndwav.c">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="src\sprinfo.c">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="src\st_main.c">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="src\tables.c">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="src\w_wad.c">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="src\z_zone.c">
+      <Filter>src</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <RxdkResource Include="Platform\xbox\titleimage.rdf">
+      <Filter>Platform\xbox</Filter>
+    </RxdkResource>
+    <RxdkResource Include="Platform\xbox\saveimage.rdf">
+      <Filter>Platform\xbox</Filter>
+    </RxdkResource>
+  </ItemGroup>
+</Project>
