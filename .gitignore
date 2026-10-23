@@ -52,3 +52,5 @@ __pycache__/
 .vscode/
 .claude/
 *.log
+
+*.nfo
